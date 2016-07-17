@@ -7,11 +7,11 @@ import os, sys, json
 import cv2
 
 
-IMAGE_SIZE = 32
-ZERO_IMG_RADIUS = 20
+IMAGE_SIZE = 40
+ZERO_IMG_RADIUS = 22
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
-if len(sys.argv) < 2: sys.argv[1] = 'app/images_input/zurich.jpeg_POI.txt'
+if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg_POI.txt')
 POI_path = sys.argv[1]
 img_path = sys.argv[1][:-8]
 if not os.path.isfile(POI_path): raise Exception('given POI-file not found')
@@ -54,9 +54,13 @@ print('cropped images: ' + str(counter))
 counter2 = 0
 # skip first 10 crops at top left because of label in image
 for i in range(10, counter * 2):
-  x0 = winX/2 * (i + 1)
-  y0 = winY/2 * (i  // image.shape[0] + 1)
+  x0 = winX/2 * (i + 1) % image.shape[1]
+  y0 = winY/2 * ((i * winY/2)  // image.shape[1] + 1)
 
+  if x < winX/2 or y < winY/2: continue
+  if y0 >= image.shape[0]: break
+
+  # print(i)
   # print (str(x0) + ' ' + str(y0))
 
   # check if there is a the radius

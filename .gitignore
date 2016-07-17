@@ -9,3 +9,4 @@ tmp
 **/*.png
 **/*.jpg
 **/*.jpeg
+**/*.ckpt

@@ -185,8 +185,8 @@ const LABELS = [{
 	width: 20,
 	length: 20
 }, {
-	color: 'violet',
-	name: 'car',
+	color: 'blue',
+	name: 'water',
 	width: 20,
 	length: 20
 }]

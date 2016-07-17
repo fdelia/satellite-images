@@ -1,3 +1,7 @@
+#
+# This is taken from the official cifar10 exampe from tensorflow. 
+# Credits for the build of this model goes to them.
+#
 
 from __future__ import absolute_import
 from __future__ import division
@@ -21,15 +25,15 @@ import math
 # gm convert -background color -extent 0x0 +matte src.png dst.png
 #
 
-IMAGE_SIZE = 32
+IMAGE_SIZE = 40
 NUM_CHANNELS = 3
 PIXEL_DEPTH = 255
-NUM_LABELS = 3
+NUM_LABELS = 4
 # VALIDATION_SIZE = 200  # Size of the validation set. / set as one third now
 TEST_SIZE = 100  # Size of test set (at the end), is new data for the network
 SEED = 66478  # Set to None for random seed.
 BATCH_SIZE = 32 # 64
-NUM_EPOCHS = 5 # ok with 100, starts being ok with 15~20
+NUM_EPOCHS = 30 # ok with 100, starts being ok with 15~20
 EVAL_BATCH_SIZE = 32 #64
 EVAL_FREQUENCY = 100  # Number of steps between evaluations.
 WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
@@ -39,11 +43,13 @@ WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
 if 'train' in sys.argv:
   tf.app.flags.DEFINE_boolean('run_only', False, 'True = only activate images, False = train network')
 else:
+  print(sys.argv)
+  if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg')
+  IMG_PATH = sys.argv[1]
   tf.app.flags.DEFINE_boolean('run_only', True, 'True = only activate images, False = train network')
 
 tf.app.flags.DEFINE_boolean("self_test", False, "True if running a self test.")
 FLAGS = tf.app.flags.FLAGS
-
 
 
 
@@ -53,7 +59,7 @@ def get_images_and_labels(max_num_images):
   labels = []
   filenameLabels = []
 
-  for label in range(0, 3):
+  for label in range(0, NUM_LABELS):
     path = 'images_cropped/' + str(label) + '/'
     filenameLabels += [(path+f, label) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
   
@@ -360,15 +366,16 @@ def main(argv=None):  # pylint: disable=unused-argument
       #   print(pred_spec.argmax(axis=1))
 
 
-      def detect_hand_in_image(image, mult):
+      def detect_in_image(image, mult):
         (winW, winH) = (IMAGE_SIZE * mult, IMAGE_SIZE * mult)
 
         clone = image.copy()
-        handX1 = []; handY1 = []; posPreds1 = []; hand1_weights= []
+        # handX1 = []; handY1 = []; posPreds1 = []; hand1_weights= []
         # handX2 = []; handY2 = []; posPreds2 = []
 
         # use step size 9 for drone
-        for (x, y, window) in sliding_window(image, stepSize=10 * mult, windowSize=(winW, winH)):
+        counter = 0
+        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2) * mult, windowSize=(winW, winH)):
           if window.shape[0] != winH or window.shape[1] != winW:
             continue
        
@@ -376,81 +383,44 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           data = numpy.asarray(window, numpy.float32)#.reshape(IMAGE_SIZE, IMAGE_SIZE, 3)
           data = (data - (PIXEL_DEPTH / 2.0)) / PIXEL_DEPTH
-          # data = data.reshape(IMAGE_SIZE, IMAGE_SIZE, 3)
 
           predictions = sess.run(eval_prediction, feed_dict={eval_data: [data]})
-          # predictions = numpy.asarray([[1 , 0]])
 
-          # TODO: use more data in bad light / special conditions, so that the prediction can be better
-          # if predictions[0][1] > predictions[0][0]:# and predictions[0][1] > 0.1:
-          if predictions[0].argmax(axis=0) == 1 and predictions[0][1] > 0.9:
-            handX1.append(x )
-            handY1.append(y )
-            # hand1_weights.append(math.pow(predictions[0][1], 12))
-            hand1_weights.append(predictions[0][1])
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 100, 100), 1)
+          if predictions[0].argmax(axis=0) == 1:# and predictions[0][1] > 0.9:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 0, 200), 1)
+            # print(predictions[0])
 
-          # if predictions[0].argmax(axis=0) == 2 and predictions[0][2] > 0.6:
-          #   handX2.append(x )
-          #   handY2.append(y )
-          #   posPreds2.append(predictions[0][2])
-          #   cv2.rectangle(clone, (x, y), (x + winW, y + winH), (100, 0, 100), 1)
+          if predictions[0].argmax(axis=0) == 2:# and predictions[0][1] > 0.9:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 200, 0), 1)
+            # print(predictions[0])
 
-        if len(handX1)>0:# or len(handX2)>0:
-          # print(hand1_weights)
-          # if len(handX1) > len(handX2):
-          # x = 0
-          # y = 0
+          if predictions[0].argmax(axis=0) == 2:# and predictions[0][1] > 0.9:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (200, 0, 0), 1)
+            # print(predictions[0])
 
-          x = int(numpy.average(handX1, weights= hand1_weights))
-          y = int(numpy.average(handY1, weights= hand1_weights))
-          # x = int(numpy.mean(handX1))
-          # y = int(numpy.mean(handY1))
-          color = (0, 255, 255) # yellow
-          # else:
-          #   x = int(numpy.mean(handX2))
-          #   y = int(numpy.mean(handY2))
-          #   color = (255, 0, 255)
+          counter += 1
+          if counter % 1000 == 0: print('processed ' + str(counter) + ' windows')
+          if counter > 5000: break
 
-          # based on Person of Interest
-          cv2.rectangle(clone, (x, y), (x + winW, y + winH), color, 1)
-          cv2.line(clone, (int(x + winW/2), y), (int(x + winW/2), y + 3*WEBCAM_MULT), color, 1)
-          cv2.line(clone, (int(x + winW/2), y + winH), (int(x + winW/2), y + winH - 3*WEBCAM_MULT), color, 1)
-          cv2.line(clone, (x, int(y + winH/2)), (x + 3*WEBCAM_MULT, int(y + winH/2)), color, 1)
-          cv2.line(clone, (x + winW, int(y + winH/2)), (x + winW - 3*WEBCAM_MULT, int(y + winH/2)), color, 1)
-        else:
-          x = -1
-          y = -1
 
-        #   return (None, None)
-        # else:
-        return x, y, clone
+        return clone
        
 
-      print('*')
-      print('TODO: load image and apply sliding window technique')
-      print('*')
-      video_capture = cv2.VideoCapture(0)
+
+      image = cv2.imread(IMG_PATH)
+
+      # detect_in_image(image, 1)
+
 
       running = True
       while running:
-        # video_capture.read()
-        ret, frame = video_capture.read()
-
-        # frame = cv2.flip(frame,-1)
-
         # start = time.time()
-        if WEBCAM_MULT > 1: frame = cv2.resize(frame, (128 * WEBCAM_MULT, 72 * WEBCAM_MULT))
-        x, y, frame = detect_hand_in_image(frame, WEBCAM_MULT + 2)
-        x, y, frame = detect_hand_in_image(frame, WEBCAM_MULT)
-        # x, y, frame = detect_hand_in_image(frame, WEBCAM_MULT + 1)
+        frame = detect_in_image(image, 1)
         # end = time.time()
         # print (end - start)
-        cv2.imshow('search for hand', frame)
-        # out.write(frame)
-        key = cv2.waitKey(1)
+        cv2.imshow('satellite image', frame)
+        key = cv2.waitKey(3*60*1000)
 
-        # if (x, y) == (None, None):
         if key == ord('c'):
           print('stopping')
           running = False
@@ -458,7 +428,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
 
 
-    # Train
+    ### Train ###
     else:
       # Loop through training steps.
       for step in xrange(int(num_epochs * train_size) // BATCH_SIZE):
