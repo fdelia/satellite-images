@@ -1,0 +1,9 @@
+<h4>Mark points of interests in image</h4>
+
+<!-- <img ng-src="{{ vm.image.path }}" ng-mousemove="vm.mouseMove($event)" ng-click="vm.mouseClick($event)" id="theImage" /> -->
+
+<canvas style="background-image:url('{{ vm.image.path }}')" id="theImage" ng-mousemove="vm.mouseMove($event)" ng-mousedown="vm.mouseDown($event)" ng-mouseup="vm.mouseUp($event)"></canvas>
+
+<div class="navbar-default navbar-fixed-bottom" style="height: 24 px; background-color:#f8f8f8;">
+	x: {{ vm.mouse.x }} , y: {{ vm.mouse.y }} , label nr: <input type="text" ng-model="vm.activeLabel" size="3" /> "{{ vm.labels[vm.activeLabel].name }}" , POIs: {{ vm.POIs.length }} | {{ vm.message }}
+</div>
