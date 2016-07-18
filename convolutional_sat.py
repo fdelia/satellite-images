@@ -104,8 +104,6 @@ def get_images_and_labels(max_num_images):
       counter += 1        
 
       # augmentation, rotate 90
-      # if label==1:
-      # im2 = im_org.rotate(90, expand=0)
       (h, w) = im_org.shape[:2]
       M = cv2.getRotationMatrix2D((w/2, h/2), 90, 1.0)
       im2 = cv2.warpAffine(im_org, M, (w, h))
@@ -114,6 +112,45 @@ def get_images_and_labels(max_num_images):
       labels = numpy.append(labels, [label])
       counter += 1                
 
+      # augmentation, rotate 15 degrees
+      M = cv2.getRotationMatrix2D((w/2, h/2), 15, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1                
+
+      # augmentation, rotate 30 degrees
+      M = cv2.getRotationMatrix2D((w/2, h/2), 30, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1                
+
+      # augmentation, rotate 45 degrees
+      M = cv2.getRotationMatrix2D((w/2, h/2), 45, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1
+
+      # augmentation, rotate 60 degrees
+      M = cv2.getRotationMatrix2D((w/2, h/2), 60, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1
+
+      # augmentation, rotate 75 degrees
+      M = cv2.getRotationMatrix2D((w/2, h/2), 75, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1
 
       if counter%1000 == 0:
         print('   loaded '+str(int(counter/1000)*1000)+' images') 
@@ -175,7 +212,7 @@ def error_rate(predictions, labels):
 
 def main(argv=None):  # pylint: disable=unused-argument
   if FLAGS.self_test or FLAGS.run_only:
-    if FLAGS.run_only: print ('Running on cam input.')
+    if FLAGS.run_only: print ('Running on file input.')
     else: print('Running self-test.')
 
     train_data, train_labels = fake_data(256)
@@ -382,17 +419,21 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           # for dev
           printPred = True
-          minPred = 0.01
+          minPred = 0.000000000000001
 
+          # house, red
           if predictions[0].argmax(axis=0) == 1 and predictions[0][1] > minPred:
             cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 0, 250), 1)
             if printPred: print(predictions[0])
 
+          # tree, green
           if predictions[0].argmax(axis=0) == 2 and predictions[0][1] > minPred:
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 250, 0), 1)
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 250, 250), 1)
             if printPred: print(predictions[0])
+            # print('Tree')
 
-          if predictions[0].argmax(axis=0) == 2 and predictions[0][1] > minPred:
+          # water, blue
+          if predictions[0].argmax(axis=0) == 3 and predictions[0][1] > minPred:
             cv2.rectangle(clone, (x, y), (x + winW, y + winH), (250, 0, 0), 1)
             if printPred: print(predictions[0])
 

@@ -8,7 +8,7 @@ import cv2
 
 
 IMAGE_SIZE = 60
-ZERO_IMG_RADIUS = 24
+ZERO_IMG_RADIUS = int(IMAGE_SIZE / 2)
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
 if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg_POI.txt')
@@ -83,5 +83,5 @@ for i in range(10, counter * 2):
   counter2 += 1
 
 print('0-images: ' + str(counter2))
-print('near POI: ' + str(counterNearPOI))
+print('(near POI: ' + str(counterNearPOI) + ')')
 

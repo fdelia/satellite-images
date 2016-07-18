@@ -45,8 +45,8 @@ app.post('/save/POI', (req, res, next) => {
 	else {
 		if (typeof(req.body.POIs) != 'string') next('savePOI: POIs have wrong type')
 
-		console.log(req.body.POIs)
-		console.log(typeof(req.body.POIs))
+		// console.log(req.body.POIs)
+		// console.log(typeof(req.body.POIs))
 
 		// this is a security risk, however it's ok here
 		fs.writeFile(getPOIfilePath(req.body.filename), req.body.POIs, (err) => {
