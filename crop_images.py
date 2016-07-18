@@ -1,14 +1,14 @@
 #
 # Crop hxw parts out of images_input/ images for neural network training.
-# Save the crops into images_cropped/label/
+# Save the crops into images_cropped/image_filename/label/
 #
 
 import os, sys, json
 import cv2
 
 
-IMAGE_SIZE = 52
-ZERO_IMG_RADIUS = 20
+IMAGE_SIZE = 60
+ZERO_IMG_RADIUS = 24
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
 if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg_POI.txt')

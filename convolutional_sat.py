@@ -25,7 +25,7 @@ import math
 # gm convert -background color -extent 0x0 +matte src.png dst.png
 #
 
-IMAGE_SIZE = 52
+IMAGE_SIZE = 60
 NUM_CHANNELS = 3
 PIXEL_DEPTH = 255
 NUM_LABELS = 4
@@ -369,7 +369,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         # use step size 9 for drone
         counter = 0
-        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.8) * mult, windowSize=(winW, winH)):
+        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.3) * mult, windowSize=(winW, winH)):
           if window.shape[0] != winH or window.shape[1] != winW:
             continue
        
