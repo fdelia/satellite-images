@@ -7,8 +7,8 @@ import os, sys, json
 import cv2
 
 
-IMAGE_SIZE = 40
-ZERO_IMG_RADIUS = 22
+IMAGE_SIZE = 52
+ZERO_IMG_RADIUS = 20
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
 if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg_POI.txt')
@@ -52,12 +52,14 @@ print('cropped images: ' + str(counter))
 
 
 counter2 = 0
+counterNearPOI = 0
 # skip first 10 crops at top left because of label in image
 for i in range(10, counter * 2):
   x0 = winX/2 * (i + 1) % image.shape[1]
   y0 = winY/2 * ((i * winY/2)  // image.shape[1] + 1)
 
-  if x < winX/2 or y < winY/2: continue
+
+  if x0 < winX/2 or y0 < winY/2: continue
   if y0 >= image.shape[0]: break
 
   # print(i)
@@ -73,6 +75,7 @@ for i in range(10, counter * 2):
       break
     
   if nearPOI:
+    counterNearPOI += 1
     continue
 
   crop = image[y0 - winY/2 : y0 + winY/2, x0 - winX/2 : x0 + winX/2]  
@@ -80,4 +83,5 @@ for i in range(10, counter * 2):
   counter2 += 1
 
 print('0-images: ' + str(counter2))
+print('near POI: ' + str(counterNearPOI))
 

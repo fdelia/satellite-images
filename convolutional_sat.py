@@ -25,25 +25,24 @@ import math
 # gm convert -background color -extent 0x0 +matte src.png dst.png
 #
 
-IMAGE_SIZE = 40
+IMAGE_SIZE = 52
 NUM_CHANNELS = 3
 PIXEL_DEPTH = 255
 NUM_LABELS = 4
 # VALIDATION_SIZE = 200  # Size of the validation set. / set as one third now
 TEST_SIZE = 100  # Size of test set (at the end), is new data for the network
 SEED = 66478  # Set to None for random seed.
-BATCH_SIZE = 32 # 64
-NUM_EPOCHS = 30 # ok with 100, starts being ok with 15~20
-EVAL_BATCH_SIZE = 32 #64
+BATCH_SIZE = 64 # 64
+NUM_EPOCHS = 10 # ok with 100, starts being ok with 15~20
+EVAL_BATCH_SIZE = 64 #64
 EVAL_FREQUENCY = 100  # Number of steps between evaluations.
 WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
   
 
-
+# configs
 if 'train' in sys.argv:
   tf.app.flags.DEFINE_boolean('run_only', False, 'True = only activate images, False = train network')
 else:
-  print(sys.argv)
   if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg')
   IMG_PATH = sys.argv[1]
   tf.app.flags.DEFINE_boolean('run_only', True, 'True = only activate images, False = train network')
@@ -106,12 +105,14 @@ def get_images_and_labels(max_num_images):
 
       # augmentation, rotate 90
       # if label==1:
-      #   im2 = im_org.rotate(90, expand=0)
-      #   im2 = numpy.asarray(im2, numpy.float32)
-      #   # images = numpy.append(images, [im2])
-      #   images.append(im2)
-      #   labels = numpy.append(labels, [label])
-      #   counter += 1                
+      # im2 = im_org.rotate(90, expand=0)
+      (h, w) = im_org.shape[:2]
+      M = cv2.getRotationMatrix2D((w/2, h/2), 90, 1.0)
+      im2 = cv2.warpAffine(im_org, M, (w, h))
+      im2 = numpy.asarray(im2, numpy.float32)
+      images.append(im2)
+      labels = numpy.append(labels, [label])
+      counter += 1                
 
 
       if counter%1000 == 0:
@@ -359,13 +360,6 @@ def main(argv=None):  # pylint: disable=unused-argument
       eval_data = tf.placeholder(tf.float32, shape=(1, IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
       eval_prediction = tf.nn.softmax(model(eval_data))
 
-      # print('special 40x40 images')
-      # special_data = special_images()
-      # for data in special_data:
-      #   pred_spec = sess.run(eval_prediction, feed_dict={eval_data: [data]})
-      #   print(pred_spec.argmax(axis=1))
-
-
       def detect_in_image(image, mult):
         (winW, winH) = (IMAGE_SIZE * mult, IMAGE_SIZE * mult)
 
@@ -375,7 +369,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         # use step size 9 for drone
         counter = 0
-        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2) * mult, windowSize=(winW, winH)):
+        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.8) * mult, windowSize=(winW, winH)):
           if window.shape[0] != winH or window.shape[1] != winW:
             continue
        
@@ -386,22 +380,25 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           predictions = sess.run(eval_prediction, feed_dict={eval_data: [data]})
 
-          if predictions[0].argmax(axis=0) == 1:# and predictions[0][1] > 0.9:
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 0, 200), 1)
-            # print(predictions[0])
+          # for dev
+          printPred = True
+          minPred = 0.01
 
-          if predictions[0].argmax(axis=0) == 2:# and predictions[0][1] > 0.9:
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 200, 0), 1)
-            # print(predictions[0])
+          if predictions[0].argmax(axis=0) == 1 and predictions[0][1] > minPred:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 0, 250), 1)
+            if printPred: print(predictions[0])
 
-          if predictions[0].argmax(axis=0) == 2:# and predictions[0][1] > 0.9:
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (200, 0, 0), 1)
-            # print(predictions[0])
+          if predictions[0].argmax(axis=0) == 2 and predictions[0][1] > minPred:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 250, 0), 1)
+            if printPred: print(predictions[0])
+
+          if predictions[0].argmax(axis=0) == 2 and predictions[0][1] > minPred:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (250, 0, 0), 1)
+            if printPred: print(predictions[0])
 
           counter += 1
           if counter % 1000 == 0: print('processed ' + str(counter) + ' windows')
-          if counter > 5000: break
-
+          if counter > 10*1000: break
 
         return clone
        
@@ -409,19 +406,19 @@ def main(argv=None):  # pylint: disable=unused-argument
 
       image = cv2.imread(IMG_PATH)
 
-      # detect_in_image(image, 1)
-
-
       running = True
       while running:
         # start = time.time()
-        frame = detect_in_image(image, 1)
+        processed_img = detect_in_image(image, 1)
         # end = time.time()
         # print (end - start)
-        cv2.imshow('satellite image', frame)
+        cv2.imwrite('output.jpeg', processed_img)
+
+        small = cv2.resize(processed_img, (2000, 2000))
+        cv2.imshow('satellite image', small)
         key = cv2.waitKey(3*60*1000)
 
-        if key == ord('c'):
+        if key == ord('c') or key == 0x1b:
           print('stopping')
           running = False
           continue
