@@ -21,15 +21,23 @@ image = cv2.imread(img_path)
 _, image_filename = os.path.split(img_path)
 
 
+# remove 0-label images first!
+print('...remove 0-label images...')
+path = 'images_cropped/0/'
+filelist = [ f for f in os.listdir(path)]
+for f in filelist:
+    os.remove(path + f)
+
+
+# crop images
+print('...start cropping...')
 counter = 0
-# x_dict = {}
 with open(POI_path) as data_file:
   POIs = json.load(data_file)
-  # print(POIs)
   print('found POIs: ' + str(len(POIs)))
 
   for POI in POIs:
-    # x and y are centers! not left top
+    # x and y are in the center! not in the left top corner
     label, x, y = POI
 
     # corrections
@@ -38,9 +46,6 @@ with open(POI_path) as data_file:
     # x and y are switched in cv2/.shape
     if x > int(image.shape[1] - winX / 2): x = image.shape[1] - winX / 2
     if y > int(image.shape[0] - winY / 2): x = image.shape[0] - winY / 2
-
-    # register in x_dict
-    # if x
 
     crop = image[y - winY/2 : y + winY/2, x - winX/2 : x + winX/2]    
     # crop = cv2.resize(crop, (40, 40))

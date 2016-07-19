@@ -28,12 +28,12 @@ import math
 IMAGE_SIZE = 60
 NUM_CHANNELS = 3
 PIXEL_DEPTH = 255
-NUM_LABELS = 4
+NUM_LABELS = 5
 # VALIDATION_SIZE = 200  # Size of the validation set. / set as one third now
 TEST_SIZE = 100  # Size of test set (at the end), is new data for the network
 SEED = 66478  # Set to None for random seed.
 BATCH_SIZE = 64 # 64
-NUM_EPOCHS = 5 # ok with 100, starts being ok with 15~20
+NUM_EPOCHS = 10 # ok with 100, starts being ok with 15~20
 EVAL_BATCH_SIZE = 64 #64
 EVAL_FREQUENCY = 100  # Number of steps between evaluations.
 WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
@@ -462,7 +462,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         small = cv2.resize(processed_img, (2000, 2000))
         cv2.imshow('satellite image', small)
-        key = cv2.waitKey(3*60*1000)
+        key = cv2.waitKey(30*1000)
 
         if key == ord('c') or key == 0x1b:
           print('stopping')
