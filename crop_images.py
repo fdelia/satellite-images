@@ -7,7 +7,7 @@ import os, sys, json
 import cv2
 
 
-IMAGE_SIZE = 60
+IMAGE_SIZE = 52
 ZERO_IMG_RADIUS = int(IMAGE_SIZE / 2)
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
@@ -24,9 +24,7 @@ _, image_filename = os.path.split(img_path)
 # remove 0-label images first!
 print('...remove 0-label images...')
 path = 'images_cropped/0/'
-filelist = [ f for f in os.listdir(path)]
-for f in filelist:
-    os.remove(path + f)
+[os.remove(path + f) for f in os.listdir(path)]
 
 
 # crop images

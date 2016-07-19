@@ -25,16 +25,16 @@ import math
 # gm convert -background color -extent 0x0 +matte src.png dst.png
 #
 
-IMAGE_SIZE = 60
+IMAGE_SIZE = 52
 NUM_CHANNELS = 3
 PIXEL_DEPTH = 255
 NUM_LABELS = 5
 # VALIDATION_SIZE = 200  # Size of the validation set. / set as one third now
 TEST_SIZE = 100  # Size of test set (at the end), is new data for the network
 SEED = 66478  # Set to None for random seed.
-BATCH_SIZE = 64 # 64
+BATCH_SIZE = 100 # 64
 NUM_EPOCHS = 10 # ok with 100, starts being ok with 15~20
-EVAL_BATCH_SIZE = 64 #64
+EVAL_BATCH_SIZE = 100 #64
 EVAL_FREQUENCY = 100  # Number of steps between evaluations.
 WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
   
@@ -112,45 +112,41 @@ def get_images_and_labels(max_num_images):
       labels = numpy.append(labels, [label])
       counter += 1                
 
-      # augmentation, rotate 15 degrees
-      M = cv2.getRotationMatrix2D((w/2, h/2), 15, 1.0)
-      im2 = cv2.warpAffine(im_org, M, (w, h))
-      im2 = numpy.asarray(im2, numpy.float32)
-      images.append(im2)
-      labels = numpy.append(labels, [label])
-      counter += 1                
+      # augmentation, rotate 15 * x degrees till 75 degrees
+      # M = cv2.getRotationMatrix2D((w/2, h/2), 15, 1.0)
+      # im2 = cv2.warpAffine(im_org, M, (w, h))
+      # im2 = numpy.asarray(im2, numpy.float32)
+      # images.append(im2)
+      # labels = numpy.append(labels, [label])
+      # counter += 1                
 
-      # augmentation, rotate 30 degrees
-      M = cv2.getRotationMatrix2D((w/2, h/2), 30, 1.0)
-      im2 = cv2.warpAffine(im_org, M, (w, h))
-      im2 = numpy.asarray(im2, numpy.float32)
-      images.append(im2)
-      labels = numpy.append(labels, [label])
-      counter += 1                
+      # M = cv2.getRotationMatrix2D((w/2, h/2), 30, 1.0)
+      # im2 = cv2.warpAffine(im_org, M, (w, h))
+      # im2 = numpy.asarray(im2, numpy.float32)
+      # images.append(im2)
+      # labels = numpy.append(labels, [label])
+      # counter += 1                
 
-      # augmentation, rotate 45 degrees
-      M = cv2.getRotationMatrix2D((w/2, h/2), 45, 1.0)
-      im2 = cv2.warpAffine(im_org, M, (w, h))
-      im2 = numpy.asarray(im2, numpy.float32)
-      images.append(im2)
-      labels = numpy.append(labels, [label])
-      counter += 1
+      # M = cv2.getRotationMatrix2D((w/2, h/2), 45, 1.0)
+      # im2 = cv2.warpAffine(im_org, M, (w, h))
+      # im2 = numpy.asarray(im2, numpy.float32)
+      # images.append(im2)
+      # labels = numpy.append(labels, [label])
+      # counter += 1
 
-      # augmentation, rotate 60 degrees
-      M = cv2.getRotationMatrix2D((w/2, h/2), 60, 1.0)
-      im2 = cv2.warpAffine(im_org, M, (w, h))
-      im2 = numpy.asarray(im2, numpy.float32)
-      images.append(im2)
-      labels = numpy.append(labels, [label])
-      counter += 1
+      # M = cv2.getRotationMatrix2D((w/2, h/2), 60, 1.0)
+      # im2 = cv2.warpAffine(im_org, M, (w, h))
+      # im2 = numpy.asarray(im2, numpy.float32)
+      # images.append(im2)
+      # labels = numpy.append(labels, [label])
+      # counter += 1
 
-      # augmentation, rotate 75 degrees
-      M = cv2.getRotationMatrix2D((w/2, h/2), 75, 1.0)
-      im2 = cv2.warpAffine(im_org, M, (w, h))
-      im2 = numpy.asarray(im2, numpy.float32)
-      images.append(im2)
-      labels = numpy.append(labels, [label])
-      counter += 1
+      # M = cv2.getRotationMatrix2D((w/2, h/2), 75, 1.0)
+      # im2 = cv2.warpAffine(im_org, M, (w, h))
+      # im2 = numpy.asarray(im2, numpy.float32)
+      # images.append(im2)
+      # labels = numpy.append(labels, [label])
+      # counter += 1
 
       if counter%1000 == 0:
         print('   loaded '+str(int(counter/1000)*1000)+' images') 
@@ -263,13 +259,13 @@ def main(argv=None):  # pylint: disable=unused-argument
                           seed=SEED))
   conv1_biases = tf.Variable(tf.zeros([48]))
   conv2_weights = tf.Variable(
-      tf.truncated_normal([5, 5, 48, 80], # was ok with 64
+      tf.truncated_normal([5, 5, 48, 64], # was ok with 64
                           stddev=0.1,
                           seed=SEED))
-  conv2_biases = tf.Variable(tf.constant(0.1, shape=[80]))
+  conv2_biases = tf.Variable(tf.constant(0.1, shape=[64]))
   fc1_weights = tf.Variable(  # fully connected, depth 512.
       tf.truncated_normal(
-          [IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 80, 512], # was ok with 512
+          [IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512], # was ok with 512
           stddev=0.1,
           seed=SEED))
   fc1_biases = tf.Variable(tf.constant(0.1, shape=[512]))
@@ -398,7 +394,7 @@ def main(argv=None):  # pylint: disable=unused-argument
       eval_prediction = tf.nn.softmax(model(eval_data))
 
       def detect_in_image(image, mult):
-        (winW, winH) = (IMAGE_SIZE * mult, IMAGE_SIZE * mult)
+        (winW, winH) = (int(IMAGE_SIZE * mult), int(IMAGE_SIZE * mult))
 
         clone = image.copy()
         # handX1 = []; handY1 = []; posPreds1 = []; hand1_weights= []
@@ -406,19 +402,20 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         # use step size 9 for drone
         counter = 0
-        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.5) * mult, windowSize=(winW, winH)):
+        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.5 * mult), windowSize=(winW, winH)):
           if window.shape[0] != winH or window.shape[1] != winW:
             continue
        
-          if mult > 1: window = cv2.resize(window, (IMAGE_SIZE, IMAGE_SIZE)) # (40, 40) 
+          # normalize size for feeding to the network
+          if mult > 1: window = cv2.resize(window, (IMAGE_SIZE, IMAGE_SIZE))
 
-          data = numpy.asarray(window, numpy.float32)#.reshape(IMAGE_SIZE, IMAGE_SIZE, 3)
+          data = numpy.asarray(window, numpy.float32)
           data = (data - (PIXEL_DEPTH / 2.0)) / PIXEL_DEPTH
 
           predictions = sess.run(eval_prediction, feed_dict={eval_data: [data]})
 
           # for dev
-          printPred = True
+          printPred = False
           minPred = 0
 
           # house, red
@@ -444,7 +441,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           counter += 1
           if counter % 1000 == 0: print('processed ' + str(counter) + ' windows')
-          if counter > 10*1000: break
+          # if counter > 50*1000 / mult**2: break
 
         return clone
        
@@ -452,22 +449,22 @@ def main(argv=None):  # pylint: disable=unused-argument
 
       image = cv2.imread(IMG_PATH)
 
-      running = True
-      while running:
-        # start = time.time()
-        processed_img = detect_in_image(image, 1)
-        # end = time.time()
-        # print (end - start)
-        cv2.imwrite('output.jpeg', processed_img)
+      # running = True
+      # while running:
+      processed_img = detect_in_image(image, 1)
+      processed_img = detect_in_image(processed_img, 1.5)
+      # processed_img = detect_in_image(processed_img, 2)
 
-        small = cv2.resize(processed_img, (2000, 2000))
-        cv2.imshow('satellite image', small)
-        key = cv2.waitKey(30*1000)
+      cv2.imwrite('output.jpeg', processed_img)
 
-        if key == ord('c') or key == 0x1b:
-          print('stopping')
-          running = False
-          continue
+      small = cv2.resize(processed_img, (2000, 2000))
+      cv2.imshow('satellite image', small)
+      key = cv2.waitKey(30*1000)
+
+      if key == ord('c') or key == 0x1b:
+        print('stopping')
+        # running = False
+        # continue
 
 
 
