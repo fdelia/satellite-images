@@ -33,7 +33,7 @@ NUM_LABELS = 4
 TEST_SIZE = 100  # Size of test set (at the end), is new data for the network
 SEED = 66478  # Set to None for random seed.
 BATCH_SIZE = 64 # 64
-NUM_EPOCHS = 10 # ok with 100, starts being ok with 15~20
+NUM_EPOCHS = 5 # ok with 100, starts being ok with 15~20
 EVAL_BATCH_SIZE = 64 #64
 EVAL_FREQUENCY = 100  # Number of steps between evaluations.
 WEBCAM_MULT = 5 # multiplier for webcam resolution (higher = better, 1 = 128x72)
@@ -258,18 +258,18 @@ def main(argv=None):  # pylint: disable=unused-argument
   # initial value which will be assigned when we call:
   # {tf.initialize_all_variables().run()}
   conv1_weights = tf.Variable(
-      tf.truncated_normal([5, 5, NUM_CHANNELS, 32],  # 5x5 filter, depth 32.
+      tf.truncated_normal([5, 5, NUM_CHANNELS, 48],  # 5x5 filter, depth 32.
                           stddev=0.1,
                           seed=SEED))
-  conv1_biases = tf.Variable(tf.zeros([32]))
+  conv1_biases = tf.Variable(tf.zeros([48]))
   conv2_weights = tf.Variable(
-      tf.truncated_normal([5, 5, 32, 64], # was ok with 64
+      tf.truncated_normal([5, 5, 48, 80], # was ok with 64
                           stddev=0.1,
                           seed=SEED))
-  conv2_biases = tf.Variable(tf.constant(0.1, shape=[64]))
+  conv2_biases = tf.Variable(tf.constant(0.1, shape=[80]))
   fc1_weights = tf.Variable(  # fully connected, depth 512.
       tf.truncated_normal(
-          [IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 64, 512], # was ok with 512
+          [IMAGE_SIZE // 4 * IMAGE_SIZE // 4 * 80, 512], # was ok with 512
           stddev=0.1,
           seed=SEED))
   fc1_biases = tf.Variable(tf.constant(0.1, shape=[512]))
@@ -406,7 +406,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
         # use step size 9 for drone
         counter = 0
-        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.3) * mult, windowSize=(winW, winH)):
+        for (x, y, window) in sliding_window(image, stepSize=int(IMAGE_SIZE/2 * 0.5) * mult, windowSize=(winW, winH)):
           if window.shape[0] != winH or window.shape[1] != winW:
             continue
        
@@ -419,7 +419,7 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           # for dev
           printPred = True
-          minPred = 0.000000000000001
+          minPred = 0
 
           # house, red
           if predictions[0].argmax(axis=0) == 1 and predictions[0][1] > minPred:
@@ -428,13 +428,18 @@ def main(argv=None):  # pylint: disable=unused-argument
 
           # tree, green
           if predictions[0].argmax(axis=0) == 2 and predictions[0][1] > minPred:
-            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 250, 250), 1)
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (0, 250, 0), 1)
             if printPred: print(predictions[0])
             # print('Tree')
 
           # water, blue
           if predictions[0].argmax(axis=0) == 3 and predictions[0][1] > minPred:
             cv2.rectangle(clone, (x, y), (x + winW, y + winH), (250, 0, 0), 1)
+            if printPred: print(predictions[0])
+
+          # street/pathway, white/grey
+          if predictions[0].argmax(axis=0) == 4 and predictions[0][1] > minPred:
+            cv2.rectangle(clone, (x, y), (x + winW, y + winH), (128, 128, 128), 1)
             if printPred: print(predictions[0])
 
           counter += 1

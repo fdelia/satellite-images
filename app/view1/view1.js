@@ -171,22 +171,16 @@ const LABELS = [{
 	// zero label for "nothing"
 	color: 'yellow',
 	name: 'nothing',
-	width: 20,
-	length: 20
-
 }, {
 	color: 'red',
 	name: 'house',
-	width: 20,
-	length: 20
 }, {
 	color: '#33FE4E',
 	name: 'tree',
-	width: 20,
-	length: 20
 }, {
 	color: 'blue',
 	name: 'water',
-	width: 20,
-	length: 20
+}, {
+	color: 'white',
+	name: 'street / pathway'
 }]
