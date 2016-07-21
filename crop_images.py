@@ -11,9 +11,9 @@ IMAGE_SIZE = 52
 ZERO_IMG_RADIUS = int(IMAGE_SIZE / 2)
 (winX, winY) = (IMAGE_SIZE, IMAGE_SIZE)
 
-if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg_POI.txt')
-POI_path = sys.argv[1]
-img_path = sys.argv[1][:-8]
+if len(sys.argv) < 2: sys.argv.append('app/images_input/zurich.jpeg')
+img_path = sys.argv[1]
+POI_path = sys.argv[1] + '_POI.txt'
 if not os.path.isfile(POI_path): raise Exception('given POI-file not found')
 if not os.path.isfile(img_path): raise Exception('image file not found')
 
